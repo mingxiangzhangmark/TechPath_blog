@@ -202,3 +202,14 @@ TOTAL COVERAGE: 90%
 
 ---
 
+
+```
+
+## Pictures
+![alt text](localhost_5173_.png)
+![alt text](image-1.png)
+![alt text](image-2.png)
+![alt text](image-3.png)
+![alt text](image-4.png)
+![alt text](image-5.png)
+![alt text](localhost_5173_posts_django-project.png)
