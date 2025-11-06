@@ -1,0 +1,36 @@
+@import "tailwindcss";
+@import "flowbite/src/themes/default";
+@plugin "flowbite/plugin";
+@source "../node_modules/flowbite";
+@plugin "daisyui";
+
+/* Checkbox Basic Style */
+.checkbox-pink {
+  appearance: none;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  width: 1rem;
+  height: 1rem;
+  background-color: white;
+  position: relative;
+  cursor: pointer;
+}
+
+/* Checkbox checked status */
+.checkbox-pink:checked {
+  background-color: #ec4899 !important;
+  border-color: #ec4899 !important;
+}
+
+/* Tick mark when checkbox is selected */
+.checkbox-pink:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}

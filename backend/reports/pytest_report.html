@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title id="head-title">pytest_report.html</title>
+      <style type="text/css">body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  /* do not increase min-width as some may use split screens */
+  min-width: 800px;
+  color: #999;
+}
+
+h1 {
+  font-size: 24px;
+  color: black;
+}
+
+h2 {
+  font-size: 16px;
+  color: black;
+}
+
+p {
+  color: black;
+}
+
+a {
+  color: #999;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/******************************
+ * SUMMARY INFORMATION
+ ******************************/
+#environment td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  vertical-align: top;
+}
+#environment tr:nth-child(odd) {
+  background-color: #f6f6f6;
+}
+#environment ul {
+  margin: 0;
+  padding: 0 20px;
+}
+
+/******************************
+ * TEST RESULT COLORS
+ ******************************/
+span.passed,
+.passed .col-result {
+  color: green;
+}
+
+span.skipped,
+span.xfailed,
+span.rerun,
+.skipped .col-result,
+.xfailed .col-result,
+.rerun .col-result {
+  color: orange;
+}
+
+span.error,
+span.failed,
+span.xpassed,
+.error .col-result,
+.failed .col-result,
+.xpassed .col-result {
+  color: red;
+}
+
+.col-links__extra {
+  margin-right: 3px;
+}
+
+/******************************
+ * RESULTS TABLE
+ *
+ * 1. Table Layout
+ * 2. Extra
+ * 3. Sorting items
+ *
+ ******************************/
+/*------------------
+ * 1. Table Layout
+ *------------------*/
+#results-table {
+  border: 1px solid #e6e6e6;
+  color: #999;
+  font-size: 12px;
+  width: 100%;
+}
+#results-table th,
+#results-table td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  text-align: left;
+}
+#results-table th {
+  font-weight: bold;
+}
+
+/*------------------
+ * 2. Extra
+ *------------------*/
+.logwrapper {
+  max-height: 230px;
+  overflow-y: scroll;
+  background-color: #e6e6e6;
+}
+.logwrapper.expanded {
+  max-height: none;
+}
+.logwrapper.expanded .logexpander:after {
+  content: "collapse [-]";
+}
+.logwrapper .logexpander {
+  z-index: 1;
+  position: sticky;
+  top: 10px;
+  width: max-content;
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 5px 7px;
+  margin: 10px 0 10px calc(100% - 80px);
+  cursor: pointer;
+  background-color: #e6e6e6;
+}
+.logwrapper .logexpander:after {
+  content: "expand [+]";
+}
+.logwrapper .logexpander:hover {
+  color: #000;
+  border-color: #000;
+}
+.logwrapper .log {
+  min-height: 40px;
+  position: relative;
+  top: -50px;
+  height: calc(100% + 50px);
+  border: 1px solid #e6e6e6;
+  color: black;
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  padding: 5px;
+  padding-right: 80px;
+  white-space: pre-wrap;
+}
+
+div.media {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin: 0 5px;
+  overflow: hidden;
+  width: 320px;
+}
+
+.media-container {
+  display: grid;
+  grid-template-columns: 25px auto 25px;
+  align-items: center;
+  flex: 1 1;
+  overflow: hidden;
+  height: 200px;
+}
+
+.media-container--fullscreen {
+  grid-template-columns: 0px auto 0px;
+}
+
+.media-container__nav--right,
+.media-container__nav--left {
+  text-align: center;
+  cursor: pointer;
+}
+
+.media-container__viewport {
+  cursor: pointer;
+  text-align: center;
+  height: inherit;
+}
+.media-container__viewport img,
+.media-container__viewport video {
+  object-fit: cover;
+  width: 100%;
+  max-height: 100%;
+}
+
+.media__name,
+.media__counter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  flex: 0 0 25px;
+  align-items: center;
+}
+
+.collapsible td:not(.col-links) {
+  cursor: pointer;
+}
+.collapsible td:not(.col-links):hover::after {
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.col-result {
+  width: 130px;
+}
+.col-result:hover::after {
+  content: " (hide details)";
+}
+
+.col-result.collapsed:hover::after {
+  content: " (show details)";
+}
+
+#environment-header h2:hover::after {
+  content: " (hide details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#environment-header.collapsed h2:hover::after {
+  content: " (show details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/*------------------
+ * 3. Sorting items
+ *------------------*/
+.sortable {
+  cursor: pointer;
+}
+.sortable.desc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: -12.5px;
+  border: 10px solid #4caf50;
+  border-bottom: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+.sortable.asc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: 12.5px;
+  border: 10px solid #4caf50;
+  border-top: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+.hidden, .summary__reload__button.hidden {
+  display: none;
+}
+
+.summary__data {
+  flex: 0 0 550px;
+}
+.summary__reload {
+  flex: 1 1;
+  display: flex;
+  justify-content: center;
+}
+.summary__reload__button {
+  flex: 0 0 300px;
+  display: flex;
+  color: white;
+  font-weight: bold;
+  background-color: #4caf50;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.summary__reload__button:hover {
+  background-color: #46a049;
+}
+.summary__spacer {
+  flex: 0 0 550px;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+}
+
+.filters,
+.collapse {
+  display: flex;
+  align-items: center;
+}
+.filters button,
+.collapse button {
+  color: #999;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.filters button:hover,
+.collapse button:hover {
+  color: #ccc;
+}
+
+.filter__label {
+  margin-right: 10px;
+}
+
+      </style>
+    
+  </head>
+  <body>
+    <h1 id="title">pytest_report.html</h1>
+    <p>Report generated on 21-Oct-2025 at 16:13:56 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a>
+        v4.1.1</p>
+    <div id="environment-header">
+      <h2>Environment</h2>
+    </div>
+    <table id="environment"></table>
+    <!-- TEMPLATES -->
+      <template id="template_environment_row">
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+    </template>
+    <template id="template_results-table__body--empty">
+      <tbody class="results-table-row">
+        <tr id="not-found-message">
+          <td colspan="4">No results found. Check the filters.</th>
+        </tr>
+    </template>
+    <template id="template_results-table__tbody">
+      <tbody class="results-table-row">
+        <tr class="collapsible">
+        </tr>
+        <tr class="extras-row">
+          <td class="extra" colspan="4">
+            <div class="extraHTML"></div>
+            <div class="media">
+              <div class="media-container">
+                  <div class="media-container__nav--left"><</div>
+                  <div class="media-container__viewport">
+                    <img src="" />
+                    <video controls>
+                      <source src="" type="video/mp4">
+                    </video>
+                  </div>
+                  <div class="media-container__nav--right">></div>
+                </div>
+                <div class="media__name"></div>
+                <div class="media__counter"></div>
+            </div>
+            <div class="logwrapper">
+              <div class="logexpander"></div>
+              <div class="log"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </template>
+    <!-- END TEMPLATES -->
+    <div class="summary">
+      <div class="summary__data">
+        <h2>Summary</h2>
+        <div class="additional-summary prefix">
+        </div>
+        <p class="run-count">126 tests took 00:00:34.</p>
+        <p class="filter">(Un)check the boxes to filter the results.</p>
+        <div class="summary__reload">
+          <div class="summary__reload__button hidden" onclick="location.reload()">
+            <div>There are still tests running. <br />Reload this page to get the latest results!</div>
+          </div>
+        </div>
+        <div class="summary__spacer"></div>
+        <div class="controls">
+          <div class="filters">
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="failed" />
+            <span class="failed">15 Failed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="passed" />
+            <span class="passed">111 Passed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="skipped" disabled/>
+            <span class="skipped">0 Skipped,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xfailed" disabled/>
+            <span class="xfailed">0 Expected failures,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xpassed" disabled/>
+            <span class="xpassed">0 Unexpected passes,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="error" disabled/>
+            <span class="error">0 Errors,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="rerun" disabled/>
+            <span class="rerun">0 Reruns</span>
+          </div>
+          <div class="collapse">
+            <button id="show_all_details">Show all details</button>&nbsp;/&nbsp;<button id="hide_all_details">Hide all details</button>
+          </div>
+        </div>
+      </div>
+      <div class="additional-summary summary">
+      </div>
+      <div class="additional-summary postfix">
+      </div>
+    </div>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable" data-column-type="result">Result</th>
+          <th class="sortable" data-column-type="testId">Test</th>
+          <th class="sortable" data-column-type="duration">Duration</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+    </table>
+  </body>
+  <footer>
+    <div id="data-container" data-jsonblob="{&#34;environment&#34;: {&#34;Python&#34;: &#34;3.11.2&#34;, &#34;Platform&#34;: &#34;Windows-10-10.0.26100-SP0&#34;, &#34;Packages&#34;: {&#34;pytest&#34;: &#34;8.3.3&#34;, &#34;pluggy&#34;: &#34;1.6.0&#34;}, &#34;Plugins&#34;: {&#34;anyio&#34;: &#34;4.10.0&#34;, &#34;Faker&#34;: &#34;30.6.0&#34;, &#34;cov&#34;: &#34;6.0.0&#34;, &#34;django&#34;: &#34;4.9.0&#34;, &#34;html&#34;: &#34;4.1.1&#34;, &#34;metadata&#34;: &#34;3.1.1&#34;}, &#34;JAVA_HOME&#34;: &#34;C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.8.9-hotspot\\&#34;}, &#34;tests&#34;: {&#34;api/test/test_admin_view.py::test_permission_denied_for_non_admin&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_admin_view.py::test_permission_denied_for_non_admin&#34;, &#34;duration&#34;: &#34;506 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_admin_view.py::test_permission_denied_for_non_admin&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;506 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_admin_view.py::test_get_returns_user_list&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_admin_view.py::test_get_returns_user_list&#34;, &#34;duration&#34;: &#34;845 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_admin_view.py::test_get_returns_user_list&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;845 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_admin_view.py::test_put_updates_admin_flag_bool_true&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_admin_view.py::test_put_updates_admin_flag_bool_true&#34;, &#34;duration&#34;: &#34;575 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_admin_view.py::test_put_updates_admin_flag_bool_true&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;575 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_admin_view.py::test_put_updates_admin_flag_string_true&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_admin_view.py::test_put_updates_admin_flag_string_true&#34;, &#34;duration&#34;: &#34;507 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_admin_view.py::test_put_updates_admin_flag_string_true&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;507 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_admin_view.py::test_put_invalid_payload_returns_400&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_admin_view.py::test_put_invalid_payload_returns_400&#34;, &#34;duration&#34;: &#34;250 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_admin_view.py::test_put_invalid_payload_returns_400&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;250 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_admin_view.py::test_put_user_not_found_returns_404&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_admin_view.py::test_put_user_not_found_returns_404&#34;, &#34;duration&#34;: &#34;238 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_admin_view.py::test_put_user_not_found_returns_404&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;238 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_admin_view.py::test_delete_prevent_self_delete&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_admin_view.py::test_delete_prevent_self_delete&#34;, &#34;duration&#34;: &#34;255 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_admin_view.py::test_delete_prevent_self_delete&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;255 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;factory = &amp;lt;rest_framework.test.APIRequestFactory object at 0x0000021060428590&amp;gt;\nadmin_user = &amp;lt;CustomUser: admin_tester&amp;gt;\n\n    def test_delete_prevent_self_delete(factory, admin_user):\n&amp;gt;       resp = _call_view(&amp;quot;delete&amp;quot;, factory, admin_user, kwargs={&amp;quot;user_id&amp;quot;: admin_user.id})\n\napi\\test\\test_admin_view.py:103: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\napi\\test\\test_admin_view.py:53: in _call_view\n    return view(request, **kwargs)\n.venv\\Lib\\site-packages\\django\\views\\decorators\\csrf.py:56: in wrapper_view\n    return view_func(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\views\\generic\\base.py:105: in view\n    return self.dispatch(request, *args, **kwargs)\n.venv\\Lib\\site-packages\\rest_framework\\views.py:515: in dispatch\n    response = self.handle_exception(exc)\n.venv\\Lib\\site-packages\\rest_framework\\views.py:475: in handle_exception\n    self.raise_uncaught_exception(exc)\n.venv\\Lib\\site-packages\\rest_framework\\views.py:486: in raise_uncaught_exception\n    raise exc\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nself = &amp;lt;api.views.admin.AdminUserManagementView object at 0x0000021060429AD0&amp;gt;\nrequest = &amp;lt;rest_framework.request.Request: DELETE &amp;#x27;/&amp;#x27;&amp;gt;, args = ()\nkwargs = {&amp;#x27;kwargs&amp;#x27;: {&amp;#x27;user_id&amp;#x27;: 264}}\nhandler = &amp;lt;bound method AdminUserManagementView.delete of &amp;lt;api.views.admin.AdminUserManagementView object at 0x0000021060429AD0&amp;gt;&amp;gt;\n\n    def dispatch(self, request, *args, **kwargs):\n        &amp;quot;&amp;quot;&amp;quot;\n        `.dispatch()` is pretty much the same as Django&amp;#x27;s regular dispatch,\n        but with extra hooks for startup, finalize, and exception handling.\n        &amp;quot;&amp;quot;&amp;quot;\n        self.args = args\n        self.kwargs = kwargs\n        request = self.initialize_request(request, *args, **kwargs)\n        self.request = request\n        self.headers = self.default_response_headers  # deprecate?\n    \n        try:\n            self.initial(request, *args, **kwargs)\n    \n            # Get the appropriate handler method\n            if request.method.lower() in self.http_method_names:\n                handler = getattr(self, request.method.lower(),\n                                  self.http_method_not_allowed)\n            else:\n                handler = self.http_method_not_allowed\n    \n&amp;gt;           response = handler(request, *args, **kwargs)\nE           TypeError: AdminUserManagementView.delete() got an unexpected keyword argument &amp;#x27;kwargs&amp;#x27;\n\n.venv\\Lib\\site-packages\\rest_framework\\views.py:512: TypeError\n&#34;}], &#34;api/test/test_admin_view.py::test_delete_other_user_success&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_admin_view.py::test_delete_other_user_success&#34;, &#34;duration&#34;: &#34;519 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_admin_view.py::test_delete_other_user_success&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;519 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;factory = &amp;lt;rest_framework.test.APIRequestFactory object at 0x0000021060539B90&amp;gt;\nadmin_user = &amp;lt;CustomUser: admin_tester&amp;gt;\nnormal_user = &amp;lt;CustomUser: normal_tester&amp;gt;\n\n    def test_delete_other_user_success(factory, admin_user, normal_user):\n&amp;gt;       resp = _call_view(&amp;quot;delete&amp;quot;, factory, admin_user, kwargs={&amp;quot;user_id&amp;quot;: normal_user.id})\n\napi\\test\\test_admin_view.py:109: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\napi\\test\\test_admin_view.py:53: in _call_view\n    return view(request, **kwargs)\n.venv\\Lib\\site-packages\\django\\views\\decorators\\csrf.py:56: in wrapper_view\n    return view_func(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\views\\generic\\base.py:105: in view\n    return self.dispatch(request, *args, **kwargs)\n.venv\\Lib\\site-packages\\rest_framework\\views.py:515: in dispatch\n    response = self.handle_exception(exc)\n.venv\\Lib\\site-packages\\rest_framework\\views.py:475: in handle_exception\n    self.raise_uncaught_exception(exc)\n.venv\\Lib\\site-packages\\rest_framework\\views.py:486: in raise_uncaught_exception\n    raise exc\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nself = &amp;lt;api.views.admin.AdminUserManagementView object at 0x0000021060539C10&amp;gt;\nrequest = &amp;lt;rest_framework.request.Request: DELETE &amp;#x27;/&amp;#x27;&amp;gt;, args = ()\nkwargs = {&amp;#x27;kwargs&amp;#x27;: {&amp;#x27;user_id&amp;#x27;: 266}}\nhandler = &amp;lt;bound method AdminUserManagementView.delete of &amp;lt;api.views.admin.AdminUserManagementView object at 0x0000021060539C10&amp;gt;&amp;gt;\n\n    def dispatch(self, request, *args, **kwargs):\n        &amp;quot;&amp;quot;&amp;quot;\n        `.dispatch()` is pretty much the same as Django&amp;#x27;s regular dispatch,\n        but with extra hooks for startup, finalize, and exception handling.\n        &amp;quot;&amp;quot;&amp;quot;\n        self.args = args\n        self.kwargs = kwargs\n        request = self.initialize_request(request, *args, **kwargs)\n        self.request = request\n        self.headers = self.default_response_headers  # deprecate?\n    \n        try:\n            self.initial(request, *args, **kwargs)\n    \n            # Get the appropriate handler method\n            if request.method.lower() in self.http_method_names:\n                handler = getattr(self, request.method.lower(),\n                                  self.http_method_not_allowed)\n            else:\n                handler = self.http_method_not_allowed\n    \n&amp;gt;           response = handler(request, *args, **kwargs)\nE           TypeError: AdminUserManagementView.delete() got an unexpected keyword argument &amp;#x27;kwargs&amp;#x27;\n\n.venv\\Lib\\site-packages\\rest_framework\\views.py:512: TypeError\n&#34;}], &#34;api/test/test_admin_view.py::test_delete_user_not_found&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_admin_view.py::test_delete_user_not_found&#34;, &#34;duration&#34;: &#34;256 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_admin_view.py::test_delete_user_not_found&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;256 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;factory = &amp;lt;rest_framework.test.APIRequestFactory object at 0x0000021060579490&amp;gt;\nadmin_user = &amp;lt;CustomUser: admin_tester&amp;gt;\n\n    def test_delete_user_not_found(factory, admin_user):\n&amp;gt;       resp = _call_view(&amp;quot;delete&amp;quot;, factory, admin_user, kwargs={&amp;quot;user_id&amp;quot;: 987654321})\n\napi\\test\\test_admin_view.py:115: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\napi\\test\\test_admin_view.py:53: in _call_view\n    return view(request, **kwargs)\n.venv\\Lib\\site-packages\\django\\views\\decorators\\csrf.py:56: in wrapper_view\n    return view_func(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\views\\generic\\base.py:105: in view\n    return self.dispatch(request, *args, **kwargs)\n.venv\\Lib\\site-packages\\rest_framework\\views.py:515: in dispatch\n    response = self.handle_exception(exc)\n.venv\\Lib\\site-packages\\rest_framework\\views.py:475: in handle_exception\n    self.raise_uncaught_exception(exc)\n.venv\\Lib\\site-packages\\rest_framework\\views.py:486: in raise_uncaught_exception\n    raise exc\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nself = &amp;lt;api.views.admin.AdminUserManagementView object at 0x00000210605791D0&amp;gt;\nrequest = &amp;lt;rest_framework.request.Request: DELETE &amp;#x27;/&amp;#x27;&amp;gt;, args = ()\nkwargs = {&amp;#x27;kwargs&amp;#x27;: {&amp;#x27;user_id&amp;#x27;: 987654321}}\nhandler = &amp;lt;bound method AdminUserManagementView.delete of &amp;lt;api.views.admin.AdminUserManagementView object at 0x00000210605791D0&amp;gt;&amp;gt;\n\n    def dispatch(self, request, *args, **kwargs):\n        &amp;quot;&amp;quot;&amp;quot;\n        `.dispatch()` is pretty much the same as Django&amp;#x27;s regular dispatch,\n        but with extra hooks for startup, finalize, and exception handling.\n        &amp;quot;&amp;quot;&amp;quot;\n        self.args = args\n        self.kwargs = kwargs\n        request = self.initialize_request(request, *args, **kwargs)\n        self.request = request\n        self.headers = self.default_response_headers  # deprecate?\n    \n        try:\n            self.initial(request, *args, **kwargs)\n    \n            # Get the appropriate handler method\n            if request.method.lower() in self.http_method_names:\n                handler = getattr(self, request.method.lower(),\n                                  self.http_method_not_allowed)\n            else:\n                handler = self.http_method_not_allowed\n    \n&amp;gt;           response = handler(request, *args, **kwargs)\nE           TypeError: AdminUserManagementView.delete() got an unexpected keyword argument &amp;#x27;kwargs&amp;#x27;\n\n.venv\\Lib\\site-packages\\rest_framework\\views.py:512: TypeError\n&#34;}], &#34;api/test/test_auth_view.py::test_signup_success&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_auth_view.py::test_signup_success&#34;, &#34;duration&#34;: &#34;27 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_auth_view.py::test_signup_success&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;27 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;factory = &amp;lt;rest_framework.test.APIRequestFactory object at 0x00000210604FCE90&amp;gt;\n\n    @override_settings(CACHES=LOC_MEM_CACHE)\n    def test_signup_success(factory):\n        payload = {&amp;quot;username&amp;quot;: &amp;quot;alice&amp;quot;, &amp;quot;email&amp;quot;: &amp;quot;alice@ex.com&amp;quot;, &amp;quot;password&amp;quot;: &amp;quot;x1234567&amp;quot;}\n        req = factory.post(&amp;quot;/&amp;quot;, data=json.dumps(payload), content_type=&amp;quot;application/json&amp;quot;)\n        resp = SignupView.as_view()(req)\n&amp;gt;       assert resp.status_code == status.HTTP_201_CREATED\nE       assert 400 == 201\nE        +  where 400 = &amp;lt;Response status_code=400, &amp;quot;text/html; charset=utf-8&amp;quot;&amp;gt;.status_code\nE        +  and   201 = status.HTTP_201_CREATED\n\napi\\test\\test_auth_view.py:31: AssertionError\n&#34;}], &#34;api/test/test_auth_view.py::test_signup_bad_request&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_auth_view.py::test_signup_bad_request&#34;, &#34;duration&#34;: &#34;14 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_auth_view.py::test_signup_bad_request&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;14 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_auth_view.py::test_login_by_username&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_auth_view.py::test_login_by_username&#34;, &#34;duration&#34;: &#34;575 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_auth_view.py::test_login_by_username&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;575 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_auth_view.py::test_login_by_email&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_auth_view.py::test_login_by_email&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_auth_view.py::test_login_by_email&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_auth_view.py::test_login_bad_credentials&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_auth_view.py::test_login_bad_credentials&#34;, &#34;duration&#34;: &#34;508 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_auth_view.py::test_login_bad_credentials&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;508 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_auth_view.py::test_logout_success&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_auth_view.py::test_logout_success&#34;, &#34;duration&#34;: &#34;279 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_auth_view.py::test_logout_success&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;279 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_auth_view.py::test_logout_missing_refresh_returns_400&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_auth_view.py::test_logout_missing_refresh_returns_400&#34;, &#34;duration&#34;: &#34;15 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_auth_view.py::test_logout_missing_refresh_returns_400&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;15 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_base_view.py::test_hello_world_returns_200_and_message&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_base_view.py::test_hello_world_returns_200_and_message&#34;, &#34;duration&#34;: &#34;8 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_base_view.py::test_hello_world_returns_200_and_message&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;8 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_comment_view.py::test_list_allows_anonymous&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_comment_view.py::test_list_allows_anonymous&#34;, &#34;duration&#34;: &#34;284 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_comment_view.py::test_list_allows_anonymous&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;284 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;factory = &amp;lt;rest_framework.test.APIRequestFactory object at 0x00000210605AE090&amp;gt;\npost = &amp;lt;Post: p1&amp;gt;, user = &amp;lt;CustomUser: u1&amp;gt;\n\n    def test_list_allows_anonymous(factory, post, user):\n        Comment.objects.create(post=post, author=user, content=&amp;quot;c1&amp;quot;)\n        req = factory.get(&amp;quot;/comments/&amp;quot;)\n        resp = _view({&amp;quot;get&amp;quot;: &amp;quot;list&amp;quot;})(req)\n        assert resp.status_code == status.HTTP_200_OK\n&amp;gt;       assert isinstance(resp.data, list)\nE       assert False\nE        +  where False = isinstance({&amp;#x27;count&amp;#x27;: 1, &amp;#x27;next&amp;#x27;: None, &amp;#x27;previous&amp;#x27;: None, &amp;#x27;results&amp;#x27;: [{&amp;#x27;id&amp;#x27;: 43, &amp;#x27;post&amp;#x27;: 99, &amp;#x27;author&amp;#x27;: 271, &amp;#x27;author_username&amp;#x27;: &amp;#x27;u1&amp;#x27;...ar&amp;#x27;: None, &amp;#x27;content&amp;#x27;: &amp;#x27;c1&amp;#x27;, &amp;#x27;created_at&amp;#x27;: &amp;#x27;2025-10-21T05:13:25.967925Z&amp;#x27;, &amp;#x27;updated_at&amp;#x27;: &amp;#x27;2025-10-21T05:13:25.967925Z&amp;#x27;}]}, list)\nE        +    where {&amp;#x27;count&amp;#x27;: 1, &amp;#x27;next&amp;#x27;: None, &amp;#x27;previous&amp;#x27;: None, &amp;#x27;results&amp;#x27;: [{&amp;#x27;id&amp;#x27;: 43, &amp;#x27;post&amp;#x27;: 99, &amp;#x27;author&amp;#x27;: 271, &amp;#x27;author_username&amp;#x27;: &amp;#x27;u1&amp;#x27;...ar&amp;#x27;: None, &amp;#x27;content&amp;#x27;: &amp;#x27;c1&amp;#x27;, &amp;#x27;created_at&amp;#x27;: &amp;#x27;2025-10-21T05:13:25.967925Z&amp;#x27;, &amp;#x27;updated_at&amp;#x27;: &amp;#x27;2025-10-21T05:13:25.967925Z&amp;#x27;}]} = &amp;lt;Response status_code=200, &amp;quot;text/html; charset=utf-8&amp;quot;&amp;gt;.data\n\napi\\test\\test_comment_view.py:53: AssertionError\n&#34;}], &#34;api/test/test_comment_view.py::test_filter_by_author_and_post&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_comment_view.py::test_filter_by_author_and_post&#34;, &#34;duration&#34;: &#34;529 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_comment_view.py::test_filter_by_author_and_post&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;529 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;factory = &amp;lt;rest_framework.test.APIRequestFactory object at 0x00000210605AD110&amp;gt;\npost = &amp;lt;Post: p1&amp;gt;, user = &amp;lt;CustomUser: u1&amp;gt;, other_user = &amp;lt;CustomUser: u2&amp;gt;\n\n    def test_filter_by_author_and_post(factory, post, user, other_user):\n        c1 = Comment.objects.create(post=post, author=user, content=&amp;quot;mine&amp;quot;)\n        Comment.objects.create(post=post, author=other_user, content=&amp;quot;other&amp;quot;)\n        req = factory.get(f&amp;quot;/comments/?author={user.id}&amp;amp;post={post.id}&amp;quot;)\n        resp = _view({&amp;quot;get&amp;quot;: &amp;quot;list&amp;quot;})(req)\n        assert resp.status_code == status.HTTP_200_OK\n&amp;gt;       ids = {item[&amp;quot;id&amp;quot;] for item in resp.data}\n\napi\\test\\test_comment_view.py:63: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\n.0 = &amp;lt;dict_keyiterator object at 0x00000210605D76A0&amp;gt;\n\n&amp;gt;   ids = {item[&amp;quot;id&amp;quot;] for item in resp.data}\nE   TypeError: string indices must be integers, not &amp;#x27;str&amp;#x27;\n\napi\\test\\test_comment_view.py:63: TypeError\n&#34;}], &#34;api/test/test_comment_view.py::test_create_requires_auth&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_comment_view.py::test_create_requires_auth&#34;, &#34;duration&#34;: &#34;251 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_comment_view.py::test_create_requires_auth&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;251 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_comment_view.py::test_create_sets_author_to_request_user&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_comment_view.py::test_create_sets_author_to_request_user&#34;, &#34;duration&#34;: &#34;259 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_comment_view.py::test_create_sets_author_to_request_user&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;259 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_comment_view.py::test_update_denied_for_non_author_non_admin&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_comment_view.py::test_update_denied_for_non_author_non_admin&#34;, &#34;duration&#34;: &#34;537 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_comment_view.py::test_update_denied_for_non_author_non_admin&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;537 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_comment_view.py::test_update_allowed_for_author&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_comment_view.py::test_update_allowed_for_author&#34;, &#34;duration&#34;: &#34;260 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_comment_view.py::test_update_allowed_for_author&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;260 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;factory = &amp;lt;rest_framework.test.APIRequestFactory object at 0x00000210604FD010&amp;gt;\npost = &amp;lt;Post: p1&amp;gt;, user = &amp;lt;CustomUser: u1&amp;gt;\n\n    def test_update_allowed_for_author(factory, post, user):\n        c = Comment.objects.create(post=post, author=user, content=&amp;quot;orig&amp;quot;)\n        payload = {&amp;quot;content&amp;quot;: &amp;quot;edited&amp;quot;}\n        req = factory.put(f&amp;quot;/comments/{c.id}/&amp;quot;, data=json.dumps(payload), content_type=&amp;quot;application/json&amp;quot;)\n        force_authenticate(req, user=user)\n        resp = _view({&amp;quot;put&amp;quot;: &amp;quot;update&amp;quot;})(req, pk=c.id)\n&amp;gt;       assert resp.status_code == status.HTTP_200_OK\nE       assert 400 == 200\nE        +  where 400 = &amp;lt;Response status_code=400, &amp;quot;text/html; charset=utf-8&amp;quot;&amp;gt;.status_code\nE        +  and   200 = status.HTTP_200_OK\n\napi\\test\\test_comment_view.py:101: AssertionError\n&#34;}], &#34;api/test/test_comment_view.py::test_destroy_allowed_for_admin&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_comment_view.py::test_destroy_allowed_for_admin&#34;, &#34;duration&#34;: &#34;525 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_comment_view.py::test_destroy_allowed_for_admin&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;525 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_comment_view.py::test_mine_requires_auth&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_comment_view.py::test_mine_requires_auth&#34;, &#34;duration&#34;: &#34;10 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_comment_view.py::test_mine_requires_auth&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;10 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;self = &amp;lt;django.db.models.fields.BigAutoField: id&amp;gt;\nvalue = &amp;lt;django.contrib.auth.models.AnonymousUser object at 0x000002106062E9D0&amp;gt;\n\n    def get_prep_value(self, value):\n        value = super().get_prep_value(value)\n        if value is None:\n            return None\n        try:\n&amp;gt;           return int(value)\n\n.venv\\Lib\\site-packages\\django\\db\\models\\fields\\__init__.py:2053: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nself = &amp;lt;django.contrib.auth.models.AnonymousUser object at 0x000002106062E9D0&amp;gt;\n\n    def __int__(self):\n&amp;gt;       raise TypeError(\n            &amp;quot;Cannot cast AnonymousUser to int. Are you trying to use it in place of &amp;quot;\n            &amp;quot;User?&amp;quot;\n        )\nE       TypeError: Cannot cast AnonymousUser to int. Are you trying to use it in place of User?\n\n.venv\\Lib\\site-packages\\django\\contrib\\auth\\models.py:437: TypeError\n\nThe above exception was the direct cause of the following exception:\n\nfactory = &amp;lt;rest_framework.test.APIRequestFactory object at 0x00000210605D35D0&amp;gt;\n\n    def test_mine_requires_auth(factory):\n        req = factory.get(&amp;quot;/comments/mine/&amp;quot;)\n&amp;gt;       resp = _view({&amp;quot;get&amp;quot;: &amp;quot;mine&amp;quot;})(req)\n\napi\\test\\test_comment_view.py:117: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n.venv\\Lib\\site-packages\\django\\views\\decorators\\csrf.py:56: in wrapper_view\n    return view_func(*args, **kwargs)\n.venv\\Lib\\site-packages\\rest_framework\\viewsets.py:125: in view\n    return self.dispatch(request, *args, **kwargs)\n.venv\\Lib\\site-packages\\rest_framework\\views.py:515: in dispatch\n    response = self.handle_exception(exc)\n.venv\\Lib\\site-packages\\rest_framework\\views.py:475: in handle_exception\n    self.raise_uncaught_exception(exc)\n.venv\\Lib\\site-packages\\rest_framework\\views.py:486: in raise_uncaught_exception\n    raise exc\n.venv\\Lib\\site-packages\\rest_framework\\views.py:512: in dispatch\n    response = handler(request, *args, **kwargs)\napi\\views\\comment.py:43: in mine\n    .filter(author=request.user)\n.venv\\Lib\\site-packages\\django\\db\\models\\query.py:1436: in filter\n    return self._filter_or_exclude(False, args, kwargs)\n.venv\\Lib\\site-packages\\django\\db\\models\\query.py:1454: in _filter_or_exclude\n    clone._filter_or_exclude_inplace(negate, args, kwargs)\n.venv\\Lib\\site-packages\\django\\db\\models\\query.py:1461: in _filter_or_exclude_inplace\n    self._query.add_q(Q(*args, **kwargs))\n.venv\\Lib\\site-packages\\django\\db\\models\\sql\\query.py:1546: in add_q\n    clause, _ = self._add_q(q_object, self.used_aliases)\n.venv\\Lib\\site-packages\\django\\db\\models\\sql\\query.py:1577: in _add_q\n    child_clause, needed_inner = self.build_filter(\n.venv\\Lib\\site-packages\\django\\db\\models\\sql\\query.py:1492: in build_filter\n    condition = self.build_lookup(lookups, col, value)\n.venv\\Lib\\site-packages\\django\\db\\models\\sql\\query.py:1319: in build_lookup\n    lookup = lookup_class(lhs, rhs)\n.venv\\Lib\\site-packages\\django\\db\\models\\lookups.py:27: in __init__\n    self.rhs = self.get_prep_lookup()\n.venv\\Lib\\site-packages\\django\\db\\models\\fields\\related_lookups.py:166: in get_prep_lookup\n    self.rhs = target_field.get_prep_value(self.rhs)\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nself = &amp;lt;django.db.models.fields.BigAutoField: id&amp;gt;\nvalue = &amp;lt;django.contrib.auth.models.AnonymousUser object at 0x000002106062E9D0&amp;gt;\n\n    def get_prep_value(self, value):\n        value = super().get_prep_value(value)\n        if value is None:\n            return None\n        try:\n            return int(value)\n        except (TypeError, ValueError) as e:\n&amp;gt;           raise e.__class__(\n                &amp;quot;Field &amp;#x27;%s&amp;#x27; expected a number but got %r.&amp;quot; % (self.name, value),\n            ) from e\nE           TypeError: Field &amp;#x27;id&amp;#x27; expected a number but got &amp;lt;django.contrib.auth.models.AnonymousUser object at 0x000002106062E9D0&amp;gt;.\n\n.venv\\Lib\\site-packages\\django\\db\\models\\fields\\__init__.py:2055: TypeError\n&#34;}], &#34;api/test/test_comment_view.py::test_mine_returns_only_self_with_limit&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_comment_view.py::test_mine_returns_only_self_with_limit&#34;, &#34;duration&#34;: &#34;565 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_comment_view.py::test_mine_returns_only_self_with_limit&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;565 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_comment_view.py::test_mine_limit_invalid_defaults_to_50&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_comment_view.py::test_mine_limit_invalid_defaults_to_50&#34;, &#34;duration&#34;: &#34;265 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_comment_view.py::test_mine_limit_invalid_defaults_to_50&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;265 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_forgot_password_view.py::test_start_missing_email&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_forgot_password_view.py::test_start_missing_email&#34;, &#34;duration&#34;: &#34;7 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_forgot_password_view.py::test_start_missing_email&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;7 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_forgot_password_view.py::test_start_user_not_found&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_forgot_password_view.py::test_start_user_not_found&#34;, &#34;duration&#34;: &#34;10 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_forgot_password_view.py::test_start_user_not_found&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;10 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_forgot_password_view.py::test_start_returns_questions&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_forgot_password_view.py::test_start_returns_questions&#34;, &#34;duration&#34;: &#34;266 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_forgot_password_view.py::test_start_returns_questions&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;266 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_forgot_password_view.py::test_verify_missing_fields&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_forgot_password_view.py::test_verify_missing_fields&#34;, &#34;duration&#34;: &#34;7 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_forgot_password_view.py::test_verify_missing_fields&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;7 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_forgot_password_view.py::test_verify_invalid_question_id&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_forgot_password_view.py::test_verify_invalid_question_id&#34;, &#34;duration&#34;: &#34;270 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_forgot_password_view.py::test_verify_invalid_question_id&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;270 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_forgot_password_view.py::test_verify_wrong_answer&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_forgot_password_view.py::test_verify_wrong_answer&#34;, &#34;duration&#34;: &#34;267 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_forgot_password_view.py::test_verify_wrong_answer&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;267 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_forgot_password_view.py::test_verify_success_returns_reset_token&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_forgot_password_view.py::test_verify_success_returns_reset_token&#34;, &#34;duration&#34;: &#34;297 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_forgot_password_view.py::test_verify_success_returns_reset_token&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;297 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_forgot_password_view.py::test_reset_missing_fields&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_forgot_password_view.py::test_reset_missing_fields&#34;, &#34;duration&#34;: &#34;7 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_forgot_password_view.py::test_reset_missing_fields&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;7 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_forgot_password_view.py::test_reset_passwords_do_not_match&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_forgot_password_view.py::test_reset_passwords_do_not_match&#34;, &#34;duration&#34;: &#34;6 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_forgot_password_view.py::test_reset_passwords_do_not_match&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;6 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_forgot_password_view.py::test_reset_short_password&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_forgot_password_view.py::test_reset_short_password&#34;, &#34;duration&#34;: &#34;7 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_forgot_password_view.py::test_reset_short_password&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;7 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_forgot_password_view.py::test_reset_invalid_token&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_forgot_password_view.py::test_reset_invalid_token&#34;, &#34;duration&#34;: &#34;7 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_forgot_password_view.py::test_reset_invalid_token&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;7 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_forgot_password_view.py::test_reset_success_flow&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_forgot_password_view.py::test_reset_success_flow&#34;, &#34;duration&#34;: &#34;805 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_forgot_password_view.py::test_reset_success_flow&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;805 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_gemini_blog_view.py::test_requires_auth&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_gemini_blog_view.py::test_requires_auth&#34;, &#34;duration&#34;: &#34;8 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_gemini_blog_view.py::test_requires_auth&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;8 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_gemini_blog_view.py::test_bad_request_missing_fields&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_gemini_blog_view.py::test_bad_request_missing_fields&#34;, &#34;duration&#34;: &#34;263 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_gemini_blog_view.py::test_bad_request_missing_fields&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;263 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_gemini_blog_view.py::test_bad_request_invalid_wordcount&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_gemini_blog_view.py::test_bad_request_invalid_wordcount&#34;, &#34;duration&#34;: &#34;290 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_gemini_blog_view.py::test_bad_request_invalid_wordcount&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;290 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_gemini_blog_view.py::test_success_returns_blog_text&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_gemini_blog_view.py::test_success_returns_blog_text&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_gemini_blog_view.py::test_success_returns_blog_text&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;factory = &amp;lt;rest_framework.test.APIRequestFactory object at 0x000002106075A310&amp;gt;\nuser = &amp;lt;CustomUser: writer&amp;gt;\nmonkeypatch = &amp;lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000210605B2790&amp;gt;\n\n    def test_success_returns_blog_text(factory, user, monkeypatch):\n        def fake_generate(prompt, wc):\n            assert prompt == &amp;quot;AI safety&amp;quot;\n            assert wc == 150\n            return &amp;quot;Generated blog content...&amp;quot;\n        monkeypatch.setattr(&amp;quot;api.utils.gemini_utils.generate_blog_text&amp;quot;, fake_generate)\n    \n        payload = {&amp;quot;wordcount&amp;quot;: 150, &amp;quot;prompt_suggestion&amp;quot;: &amp;quot;AI safety&amp;quot;}\n        resp = _post(factory, user=user, data=payload)\n        assert resp.status_code == status.HTTP_200_OK\n        assert &amp;quot;blog_text&amp;quot; in resp.data\n&amp;gt;       assert resp.data[&amp;quot;blog_text&amp;quot;].startswith(&amp;quot;Generated blog content&amp;quot;)\nE       AssertionError: assert False\nE        +  where False = &amp;lt;built-in method startswith of str object at 0x000002105CE11020&amp;gt;(&amp;#x27;Generated blog content&amp;#x27;)\nE        +    where &amp;lt;built-in method startswith of str object at 0x000002105CE11020&amp;gt; = &amp;#x27;&amp;lt;h2&amp;gt;AI Safety: Navigating the Future Responsibly&amp;lt;/h2&amp;gt;\\n\\n&amp;lt;p&amp;gt;Artificial Intelligence is rapidly evolving, promising in...ul&amp;gt;\\n\\n&amp;lt;p&amp;gt;By staying informed and supporting these efforts, we can help shape a future where AI benefits everyone!&amp;lt;/p&amp;gt;&amp;#x27;.startswith\n\napi\\test\\test_gemini_blog_view.py:56: AssertionError\n&#34;}], &#34;api/test/test_gemini_blog_view.py::test_llm_raises_returns_500&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_gemini_blog_view.py::test_llm_raises_returns_500&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_gemini_blog_view.py::test_llm_raises_returns_500&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;factory = &amp;lt;rest_framework.test.APIRequestFactory object at 0x000002106042A9D0&amp;gt;\nuser = &amp;lt;CustomUser: writer&amp;gt;\nmonkeypatch = &amp;lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000021060F5EDD0&amp;gt;\n\n    def test_llm_raises_returns_500(factory, user, monkeypatch):\n        def boom(*args, **kwargs):\n            raise RuntimeError(&amp;quot;model backend down&amp;quot;)\n        monkeypatch.setattr(&amp;quot;api.utils.gemini_utils.generate_blog_text&amp;quot;, boom)\n    \n        payload = {&amp;quot;wordcount&amp;quot;: 120, &amp;quot;prompt_suggestion&amp;quot;: &amp;quot;Resilience&amp;quot;}\n        resp = _post(factory, user=user, data=payload)\n&amp;gt;       assert resp.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR\nE       assert 200 == 500\nE        +  where 200 = &amp;lt;Response status_code=200, &amp;quot;text/html; charset=utf-8&amp;quot;&amp;gt;.status_code\nE        +  and   500 = status.HTTP_500_INTERNAL_SERVER_ERROR\n\napi\\test\\test_gemini_blog_view.py:66: AssertionError\n&#34;}], &#34;api/test/test_google_one_tap.py::test_missing_credential_returns_400&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_google_one_tap.py::test_missing_credential_returns_400&#34;, &#34;duration&#34;: &#34;16 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_google_one_tap.py::test_missing_credential_returns_400&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;16 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_google_one_tap.py::test_invalid_token_returns_400&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_google_one_tap.py::test_invalid_token_returns_400&#34;, &#34;duration&#34;: &#34;13 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_google_one_tap.py::test_invalid_token_returns_400&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;13 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_google_one_tap.py::test_no_email_in_idinfo_returns_400&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_google_one_tap.py::test_no_email_in_idinfo_returns_400&#34;, &#34;duration&#34;: &#34;8 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_google_one_tap.py::test_no_email_in_idinfo_returns_400&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;8 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_google_one_tap.py::test_success_creates_user_and_returns_tokens&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_google_one_tap.py::test_success_creates_user_and_returns_tokens&#34;, &#34;duration&#34;: &#34;23 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_google_one_tap.py::test_success_creates_user_and_returns_tokens&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;23 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_google_one_tap.py::test_success_existing_user_login&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_google_one_tap.py::test_success_existing_user_login&#34;, &#34;duration&#34;: &#34;279 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_google_one_tap.py::test_success_existing_user_login&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;279 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_highlighted_posts_view.py::test_highlighted_allows_anonymous_and_has_keys&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_highlighted_posts_view.py::test_highlighted_allows_anonymous_and_has_keys&#34;, &#34;duration&#34;: &#34;15 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_highlighted_posts_view.py::test_highlighted_allows_anonymous_and_has_keys&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;15 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_highlighted_posts_view.py::test_latest_returns_top6_by_created_desc&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_highlighted_posts_view.py::test_latest_returns_top6_by_created_desc&#34;, &#34;duration&#34;: &#34;11 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_highlighted_posts_view.py::test_latest_returns_top6_by_created_desc&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;11 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;self = &amp;lt;django.db.backends.utils.CursorWrapper object at 0x00000210605FCC90&amp;gt;\nsql = &amp;#x27;INSERT INTO &amp;quot;api_post&amp;quot; (&amp;quot;author_id&amp;quot;, &amp;quot;title&amp;quot;, &amp;quot;slug&amp;quot;, &amp;quot;content&amp;quot;, &amp;quot;cover&amp;quot;, &amp;quot;is_published&amp;quot;, &amp;quot;created_at&amp;quot;, &amp;quot;updated_at&amp;quot;) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING &amp;quot;api_post&amp;quot;.&amp;quot;id&amp;quot;&amp;#x27;\nparams = (None, &amp;#x27;p1&amp;#x27;, &amp;#x27;p1&amp;#x27;, &amp;#x27;...&amp;#x27;, &amp;#x27;&amp;#x27;, True, ...)\nignored_wrapper_args = (False, {&amp;#x27;connection&amp;#x27;: &amp;lt;DatabaseWrapper vendor=&amp;#x27;postgresql&amp;#x27; alias=&amp;#x27;default&amp;#x27;&amp;gt;, &amp;#x27;cursor&amp;#x27;: &amp;lt;django.db.backends.utils.CursorWrapper object at 0x00000210605FCC90&amp;gt;})\n\n    def _execute(self, sql, params, *ignored_wrapper_args):\n        self.db.validate_no_broken_transaction()\n        with self.db.wrap_database_errors:\n            if params is None:\n                # params default might be backend specific.\n                return self.cursor.execute(sql)\n            else:\n&amp;gt;               return self.cursor.execute(sql, params)\nE               psycopg2.errors.NotNullViolation: null value in column &amp;quot;author_id&amp;quot; of relation &amp;quot;api_post&amp;quot; violates not-null constraint\nE               DETAIL:  Failing row contains (108, p1, p1, ..., , t, 2025-10-21 05:13:38.873626+00, 2025-10-21 05:13:38.873626+00, null).\n\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:89: NotNullViolation\n\nThe above exception was the direct cause of the following exception:\n\nfactory = &amp;lt;rest_framework.test.APIRequestFactory object at 0x0000021060590650&amp;gt;\n\n    def test_latest_returns_top6_by_created_desc(factory):\n        posts = []\n        for i in range(1, 9):\n&amp;gt;           posts.append(_mk_post(i, published=True, minutes_ago=(9 - i)))  # i \u8d8a\u5927\uff0cminutes_ago \u8d8a\u5c0f \u2192 \u8d8a\u65b0\n\napi\\test\\test_highlighted_posts_view.py:53: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\napi\\test\\test_highlighted_posts_view.py:29: in _mk_post\n    return Post.objects.create(\n.venv\\Lib\\site-packages\\django\\db\\models\\manager.py:87: in manager_method\n    return getattr(self.get_queryset(), name)(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\db\\models\\query.py:658: in create\n    obj.save(force_insert=True, using=self.db)\napi\\models\\post.py:44: in save\n    super().save(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:814: in save\n    self.save_base(\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:877: in save_base\n    updated = self._save_table(\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:1020: in _save_table\n    results = self._do_insert(\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:1061: in _do_insert\n    return manager._insert(\n.venv\\Lib\\site-packages\\django\\db\\models\\manager.py:87: in manager_method\n    return getattr(self.get_queryset(), name)(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\db\\models\\query.py:1805: in _insert\n    return query.get_compiler(using=using).execute_sql(returning_fields)\n.venv\\Lib\\site-packages\\django\\db\\models\\sql\\compiler.py:1822: in execute_sql\n    cursor.execute(sql, params)\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:67: in execute\n    return self._execute_with_wrappers(\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:80: in _execute_with_wrappers\n    return executor(sql, params, many, context)\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:84: in _execute\n    with self.db.wrap_database_errors:\n.venv\\Lib\\site-packages\\django\\db\\utils.py:91: in __exit__\n    raise dj_exc_value.with_traceback(traceback) from exc_value\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nself = &amp;lt;django.db.backends.utils.CursorWrapper object at 0x00000210605FCC90&amp;gt;\nsql = &amp;#x27;INSERT INTO &amp;quot;api_post&amp;quot; (&amp;quot;author_id&amp;quot;, &amp;quot;title&amp;quot;, &amp;quot;slug&amp;quot;, &amp;quot;content&amp;quot;, &amp;quot;cover&amp;quot;, &amp;quot;is_published&amp;quot;, &amp;quot;created_at&amp;quot;, &amp;quot;updated_at&amp;quot;) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING &amp;quot;api_post&amp;quot;.&amp;quot;id&amp;quot;&amp;#x27;\nparams = (None, &amp;#x27;p1&amp;#x27;, &amp;#x27;p1&amp;#x27;, &amp;#x27;...&amp;#x27;, &amp;#x27;&amp;#x27;, True, ...)\nignored_wrapper_args = (False, {&amp;#x27;connection&amp;#x27;: &amp;lt;DatabaseWrapper vendor=&amp;#x27;postgresql&amp;#x27; alias=&amp;#x27;default&amp;#x27;&amp;gt;, &amp;#x27;cursor&amp;#x27;: &amp;lt;django.db.backends.utils.CursorWrapper object at 0x00000210605FCC90&amp;gt;})\n\n    def _execute(self, sql, params, *ignored_wrapper_args):\n        self.db.validate_no_broken_transaction()\n        with self.db.wrap_database_errors:\n            if params is None:\n                # params default might be backend specific.\n                return self.cursor.execute(sql)\n            else:\n&amp;gt;               return self.cursor.execute(sql, params)\nE               django.db.utils.IntegrityError: null value in column &amp;quot;author_id&amp;quot; of relation &amp;quot;api_post&amp;quot; violates not-null constraint\nE               DETAIL:  Failing row contains (108, p1, p1, ..., , t, 2025-10-21 05:13:38.873626+00, 2025-10-21 05:13:38.873626+00, null).\n\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:89: IntegrityError\n&#34;}], &#34;api/test/test_highlighted_posts_view.py::test_most_liked_sorted_and_only_published&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_highlighted_posts_view.py::test_most_liked_sorted_and_only_published&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_highlighted_posts_view.py::test_most_liked_sorted_and_only_published&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;self = &amp;lt;django.db.backends.utils.CursorWrapper object at 0x0000021060BE6350&amp;gt;\nsql = &amp;#x27;INSERT INTO &amp;quot;api_post&amp;quot; (&amp;quot;author_id&amp;quot;, &amp;quot;title&amp;quot;, &amp;quot;slug&amp;quot;, &amp;quot;content&amp;quot;, &amp;quot;cover&amp;quot;, &amp;quot;is_published&amp;quot;, &amp;quot;created_at&amp;quot;, &amp;quot;updated_at&amp;quot;) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING &amp;quot;api_post&amp;quot;.&amp;quot;id&amp;quot;&amp;#x27;\nparams = (None, &amp;#x27;p0&amp;#x27;, &amp;#x27;p0&amp;#x27;, &amp;#x27;...&amp;#x27;, &amp;#x27;&amp;#x27;, False, ...)\nignored_wrapper_args = (False, {&amp;#x27;connection&amp;#x27;: &amp;lt;DatabaseWrapper vendor=&amp;#x27;postgresql&amp;#x27; alias=&amp;#x27;default&amp;#x27;&amp;gt;, &amp;#x27;cursor&amp;#x27;: &amp;lt;django.db.backends.utils.CursorWrapper object at 0x0000021060BE6350&amp;gt;})\n\n    def _execute(self, sql, params, *ignored_wrapper_args):\n        self.db.validate_no_broken_transaction()\n        with self.db.wrap_database_errors:\n            if params is None:\n                # params default might be backend specific.\n                return self.cursor.execute(sql)\n            else:\n&amp;gt;               return self.cursor.execute(sql, params)\nE               psycopg2.errors.NotNullViolation: null value in column &amp;quot;author_id&amp;quot; of relation &amp;quot;api_post&amp;quot; violates not-null constraint\nE               DETAIL:  Failing row contains (109, p0, p0, ..., , f, 2025-10-21 05:13:40.637992+00, 2025-10-21 05:13:40.637992+00, null).\n\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:89: NotNullViolation\n\nThe above exception was the direct cause of the following exception:\n\nfactory = &amp;lt;rest_framework.test.APIRequestFactory object at 0x0000021060BFD910&amp;gt;\nusers = [&amp;lt;CustomUser: u1&amp;gt;, &amp;lt;CustomUser: u2&amp;gt;, &amp;lt;CustomUser: u3&amp;gt;, &amp;lt;CustomUser: u4&amp;gt;, &amp;lt;CustomUser: u5&amp;gt;]\n\n    def test_most_liked_sorted_and_only_published(factory, users):\n&amp;gt;       _mk_post(0, published=False)\n\napi\\test\\test_highlighted_posts_view.py:66: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\napi\\test\\test_highlighted_posts_view.py:29: in _mk_post\n    return Post.objects.create(\n.venv\\Lib\\site-packages\\django\\db\\models\\manager.py:87: in manager_method\n    return getattr(self.get_queryset(), name)(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\db\\models\\query.py:658: in create\n    obj.save(force_insert=True, using=self.db)\napi\\models\\post.py:44: in save\n    super().save(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:814: in save\n    self.save_base(\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:877: in save_base\n    updated = self._save_table(\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:1020: in _save_table\n    results = self._do_insert(\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:1061: in _do_insert\n    return manager._insert(\n.venv\\Lib\\site-packages\\django\\db\\models\\manager.py:87: in manager_method\n    return getattr(self.get_queryset(), name)(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\db\\models\\query.py:1805: in _insert\n    return query.get_compiler(using=using).execute_sql(returning_fields)\n.venv\\Lib\\site-packages\\django\\db\\models\\sql\\compiler.py:1822: in execute_sql\n    cursor.execute(sql, params)\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:67: in execute\n    return self._execute_with_wrappers(\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:80: in _execute_with_wrappers\n    return executor(sql, params, many, context)\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:84: in _execute\n    with self.db.wrap_database_errors:\n.venv\\Lib\\site-packages\\django\\db\\utils.py:91: in __exit__\n    raise dj_exc_value.with_traceback(traceback) from exc_value\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nself = &amp;lt;django.db.backends.utils.CursorWrapper object at 0x0000021060BE6350&amp;gt;\nsql = &amp;#x27;INSERT INTO &amp;quot;api_post&amp;quot; (&amp;quot;author_id&amp;quot;, &amp;quot;title&amp;quot;, &amp;quot;slug&amp;quot;, &amp;quot;content&amp;quot;, &amp;quot;cover&amp;quot;, &amp;quot;is_published&amp;quot;, &amp;quot;created_at&amp;quot;, &amp;quot;updated_at&amp;quot;) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING &amp;quot;api_post&amp;quot;.&amp;quot;id&amp;quot;&amp;#x27;\nparams = (None, &amp;#x27;p0&amp;#x27;, &amp;#x27;p0&amp;#x27;, &amp;#x27;...&amp;#x27;, &amp;#x27;&amp;#x27;, False, ...)\nignored_wrapper_args = (False, {&amp;#x27;connection&amp;#x27;: &amp;lt;DatabaseWrapper vendor=&amp;#x27;postgresql&amp;#x27; alias=&amp;#x27;default&amp;#x27;&amp;gt;, &amp;#x27;cursor&amp;#x27;: &amp;lt;django.db.backends.utils.CursorWrapper object at 0x0000021060BE6350&amp;gt;})\n\n    def _execute(self, sql, params, *ignored_wrapper_args):\n        self.db.validate_no_broken_transaction()\n        with self.db.wrap_database_errors:\n            if params is None:\n                # params default might be backend specific.\n                return self.cursor.execute(sql)\n            else:\n&amp;gt;               return self.cursor.execute(sql, params)\nE               django.db.utils.IntegrityError: null value in column &amp;quot;author_id&amp;quot; of relation &amp;quot;api_post&amp;quot; violates not-null constraint\nE               DETAIL:  Failing row contains (109, p0, p0, ..., , f, 2025-10-21 05:13:40.637992+00, 2025-10-21 05:13:40.637992+00, null).\n\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:89: IntegrityError\n&#34;}], &#34;api/test/test_like_view.py::test_list_requires_auth&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_like_view.py::test_list_requires_auth&#34;, &#34;duration&#34;: &#34;286 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_like_view.py::test_list_requires_auth&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;286 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_like_view.py::test_create_requires_auth_and_sets_user_ignored_payload_user&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_like_view.py::test_create_requires_auth_and_sets_user_ignored_payload_user&#34;, &#34;duration&#34;: &#34;778 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_like_view.py::test_create_requires_auth_and_sets_user_ignored_payload_user&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;778 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_like_view.py::test_destroy_only_owner_can_delete&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_like_view.py::test_destroy_only_owner_can_delete&#34;, &#34;duration&#34;: &#34;557 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_like_view.py::test_destroy_only_owner_can_delete&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;557 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_models.py::test_user_profile_creation_signal&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_models.py::test_user_profile_creation_signal&#34;, &#34;duration&#34;: &#34;270 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_models.py::test_user_profile_creation_signal&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;270 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_models.py::test_user_str_method&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_models.py::test_user_str_method&#34;, &#34;duration&#34;: &#34;264 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_models.py::test_user_str_method&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;264 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_models.py::test_tag_slug_auto_generation&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_models.py::test_tag_slug_auto_generation&#34;, &#34;duration&#34;: &#34;13 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_models.py::test_tag_slug_auto_generation&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;13 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_models.py::test_tag_slug_unique_increment&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_models.py::test_tag_slug_unique_increment&#34;, &#34;duration&#34;: &#34;10 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_models.py::test_tag_slug_unique_increment&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;10 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;self = &amp;lt;django.db.backends.utils.CursorWrapper object at 0x00000210605FEC10&amp;gt;\nsql = &amp;#x27;INSERT INTO &amp;quot;api_tag&amp;quot; (&amp;quot;name&amp;quot;, &amp;quot;slug&amp;quot;) VALUES (%s, %s) RETURNING &amp;quot;api_tag&amp;quot;.&amp;quot;id&amp;quot;&amp;#x27;\nparams = (&amp;#x27;python&amp;#x27;, &amp;#x27;python-1&amp;#x27;)\nignored_wrapper_args = (False, {&amp;#x27;connection&amp;#x27;: &amp;lt;DatabaseWrapper vendor=&amp;#x27;postgresql&amp;#x27; alias=&amp;#x27;default&amp;#x27;&amp;gt;, &amp;#x27;cursor&amp;#x27;: &amp;lt;django.db.backends.utils.CursorWrapper object at 0x00000210605FEC10&amp;gt;})\n\n    def _execute(self, sql, params, *ignored_wrapper_args):\n        self.db.validate_no_broken_transaction()\n        with self.db.wrap_database_errors:\n            if params is None:\n                # params default might be backend specific.\n                return self.cursor.execute(sql)\n            else:\n&amp;gt;               return self.cursor.execute(sql, params)\nE               psycopg2.errors.UniqueViolation: duplicate key value violates unique constraint &amp;quot;api_tag_name_key&amp;quot;\nE               DETAIL:  Key (name)=(python) already exists.\n\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:89: UniqueViolation\n\nThe above exception was the direct cause of the following exception:\n\n&amp;gt;   ???\n\napi\\test\\test_models.py:43: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n.venv\\Lib\\site-packages\\django\\db\\models\\manager.py:87: in manager_method\n    return getattr(self.get_queryset(), name)(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\db\\models\\query.py:658: in create\n    obj.save(force_insert=True, using=self.db)\napi\\models\\tag.py:25: in save\n    super().save(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:814: in save\n    self.save_base(\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:877: in save_base\n    updated = self._save_table(\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:1020: in _save_table\n    results = self._do_insert(\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:1061: in _do_insert\n    return manager._insert(\n.venv\\Lib\\site-packages\\django\\db\\models\\manager.py:87: in manager_method\n    return getattr(self.get_queryset(), name)(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\db\\models\\query.py:1805: in _insert\n    return query.get_compiler(using=using).execute_sql(returning_fields)\n.venv\\Lib\\site-packages\\django\\db\\models\\sql\\compiler.py:1822: in execute_sql\n    cursor.execute(sql, params)\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:67: in execute\n    return self._execute_with_wrappers(\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:80: in _execute_with_wrappers\n    return executor(sql, params, many, context)\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:84: in _execute\n    with self.db.wrap_database_errors:\n.venv\\Lib\\site-packages\\django\\db\\utils.py:91: in __exit__\n    raise dj_exc_value.with_traceback(traceback) from exc_value\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nself = &amp;lt;django.db.backends.utils.CursorWrapper object at 0x00000210605FEC10&amp;gt;\nsql = &amp;#x27;INSERT INTO &amp;quot;api_tag&amp;quot; (&amp;quot;name&amp;quot;, &amp;quot;slug&amp;quot;) VALUES (%s, %s) RETURNING &amp;quot;api_tag&amp;quot;.&amp;quot;id&amp;quot;&amp;#x27;\nparams = (&amp;#x27;python&amp;#x27;, &amp;#x27;python-1&amp;#x27;)\nignored_wrapper_args = (False, {&amp;#x27;connection&amp;#x27;: &amp;lt;DatabaseWrapper vendor=&amp;#x27;postgresql&amp;#x27; alias=&amp;#x27;default&amp;#x27;&amp;gt;, &amp;#x27;cursor&amp;#x27;: &amp;lt;django.db.backends.utils.CursorWrapper object at 0x00000210605FEC10&amp;gt;})\n\n    def _execute(self, sql, params, *ignored_wrapper_args):\n        self.db.validate_no_broken_transaction()\n        with self.db.wrap_database_errors:\n            if params is None:\n                # params default might be backend specific.\n                return self.cursor.execute(sql)\n            else:\n&amp;gt;               return self.cursor.execute(sql, params)\nE               django.db.utils.IntegrityError: duplicate key value violates unique constraint &amp;quot;api_tag_name_key&amp;quot;\nE               DETAIL:  Key (name)=(python) already exists.\n\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:89: IntegrityError\n&#34;}], &#34;api/test/test_models.py::test_post_slug_auto_generation&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_models.py::test_post_slug_auto_generation&#34;, &#34;duration&#34;: &#34;280 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_models.py::test_post_slug_auto_generation&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;280 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_models.py::test_post_duplicate_slug_increment&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_models.py::test_post_duplicate_slug_increment&#34;, &#34;duration&#34;: &#34;285 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_models.py::test_post_duplicate_slug_increment&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;285 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_models.py::test_comment_creation_and_str&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_models.py::test_comment_creation_and_str&#34;, &#34;duration&#34;: &#34;275 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_models.py::test_comment_creation_and_str&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;275 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_models.py::test_like_unique_together_constraint&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_models.py::test_like_unique_together_constraint&#34;, &#34;duration&#34;: &#34;274 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_models.py::test_like_unique_together_constraint&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;274 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_models.py::test_security_question_and_answer_str&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_models.py::test_security_question_and_answer_str&#34;, &#34;duration&#34;: &#34;268 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_models.py::test_security_question_and_answer_str&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;268 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_models.py::test_user_security_answer_unique_constraint&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_models.py::test_user_security_answer_unique_constraint&#34;, &#34;duration&#34;: &#34;282 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_models.py::test_user_security_answer_unique_constraint&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;282 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_post_view.py::test_list_search_and_ordering&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_post_view.py::test_list_search_and_ordering&#34;, &#34;duration&#34;: &#34;766 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_post_view.py::test_list_search_and_ordering&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;766 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_post_view.py::test_filter_by_tags_query_param&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_post_view.py::test_filter_by_tags_query_param&#34;, &#34;duration&#34;: &#34;582 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_post_view.py::test_filter_by_tags_query_param&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;582 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_post_view.py::test_retrieve_by_slug&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_post_view.py::test_retrieve_by_slug&#34;, &#34;duration&#34;: &#34;265 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_post_view.py::test_retrieve_by_slug&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;265 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_post_view.py::test_create_requires_auth_and_sets_author&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_post_view.py::test_create_requires_auth_and_sets_author&#34;, &#34;duration&#34;: &#34;277 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_post_view.py::test_create_requires_auth_and_sets_author&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;277 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nWARNING  django.request:log.py:246 Unauthorized: /api/posts/\n\n&#34;}], &#34;api/test/test_post_view.py::test_update_only_author_or_admin&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_post_view.py::test_update_only_author_or_admin&#34;, &#34;duration&#34;: &#34;811 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_post_view.py::test_update_only_author_or_admin&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;811 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nWARNING  django.request:log.py:246 Forbidden: /api/posts/edit-me-0acbca/\n\n&#34;}], &#34;api/test/test_post_view.py::test_delete_only_author_or_admin&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_post_view.py::test_delete_only_author_or_admin&#34;, &#34;duration&#34;: &#34;809 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_post_view.py::test_delete_only_author_or_admin&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;809 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log call -------------------------------\nWARNING  django.request:log.py:246 Unauthorized: /api/posts/delete-me-c5e573/\nWARNING  django.request:log.py:246 Forbidden: /api/posts/delete-me-c5e573/\n\n&#34;}], &#34;api/test/test_serializers.py::test_signup_serializer_creates_user_and_answers&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_serializers.py::test_signup_serializer_creates_user_and_answers&#34;, &#34;duration&#34;: &#34;285 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_serializers.py::test_signup_serializer_creates_user_and_answers&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;285 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_serializers.py::test_signup_serializer_duplicate_email&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_serializers.py::test_signup_serializer_duplicate_email&#34;, &#34;duration&#34;: &#34;260 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_serializers.py::test_signup_serializer_duplicate_email&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;260 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_serializers.py::test_signup_serializer_invalid_phone&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_serializers.py::test_signup_serializer_invalid_phone&#34;, &#34;duration&#34;: &#34;16 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_serializers.py::test_signup_serializer_invalid_phone&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;16 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_serializers.py::test_security_question_serializer_output&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_serializers.py::test_security_question_serializer_output&#34;, &#34;duration&#34;: &#34;11 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_serializers.py::test_security_question_serializer_output&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;11 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_serializers.py::test_verify_security_answers_valid_flow&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_serializers.py::test_verify_security_answers_valid_flow&#34;, &#34;duration&#34;: &#34;802 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_serializers.py::test_verify_security_answers_valid_flow&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;802 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_serializers.py::test_verify_security_answers_wrong_answer&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_serializers.py::test_verify_security_answers_wrong_answer&#34;, &#34;duration&#34;: &#34;262 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_serializers.py::test_verify_security_answers_wrong_answer&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;262 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_serializers.py::test_user_profile_serializer_updates_profile&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_serializers.py::test_user_profile_serializer_updates_profile&#34;, &#34;duration&#34;: &#34;338 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_serializers.py::test_user_profile_serializer_updates_profile&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;338 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_serializers.py::test_post_serializer_create_with_tags&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_serializers.py::test_post_serializer_create_with_tags&#34;, &#34;duration&#34;: &#34;248 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_serializers.py::test_post_serializer_create_with_tags&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;248 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;self = &amp;lt;django.db.backends.utils.CursorWrapper object at 0x0000021060FE7650&amp;gt;\nsql = &amp;#x27;INSERT INTO &amp;quot;api_tag&amp;quot; (&amp;quot;name&amp;quot;, &amp;quot;slug&amp;quot;) VALUES (%s, %s) RETURNING &amp;quot;api_tag&amp;quot;.&amp;quot;id&amp;quot;&amp;#x27;\nparams = (&amp;#x27;django&amp;#x27;, &amp;#x27;django-1&amp;#x27;)\nignored_wrapper_args = (False, {&amp;#x27;connection&amp;#x27;: &amp;lt;DatabaseWrapper vendor=&amp;#x27;postgresql&amp;#x27; alias=&amp;#x27;default&amp;#x27;&amp;gt;, &amp;#x27;cursor&amp;#x27;: &amp;lt;django.db.backends.utils.CursorWrapper object at 0x0000021060FE7650&amp;gt;})\n\n    def _execute(self, sql, params, *ignored_wrapper_args):\n        self.db.validate_no_broken_transaction()\n        with self.db.wrap_database_errors:\n            if params is None:\n                # params default might be backend specific.\n                return self.cursor.execute(sql)\n            else:\n&amp;gt;               return self.cursor.execute(sql, params)\nE               psycopg2.errors.UniqueViolation: duplicate key value violates unique constraint &amp;quot;api_tag_name_key&amp;quot;\nE               DETAIL:  Key (name)=(django) already exists.\n\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:89: UniqueViolation\n\nThe above exception was the direct cause of the following exception:\n\n    @pytest.mark.django_db\n    def test_post_serializer_create_with_tags():\n        &amp;quot;&amp;quot;&amp;quot;PostSerializer should create post with tags&amp;quot;&amp;quot;&amp;quot;\n        factory = APIRequestFactory()\n        user = CustomUser.objects.create_user(username=&amp;quot;writer&amp;quot;, email=&amp;quot;w@example.com&amp;quot;, password=&amp;quot;x&amp;quot;)\n&amp;gt;       tag1 = Tag.objects.create(name=&amp;quot;django&amp;quot;)\n\napi\\test\\test_serializers.py:154: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n.venv\\Lib\\site-packages\\django\\db\\models\\manager.py:87: in manager_method\n    return getattr(self.get_queryset(), name)(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\db\\models\\query.py:658: in create\n    obj.save(force_insert=True, using=self.db)\napi\\models\\tag.py:25: in save\n    super().save(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:814: in save\n    self.save_base(\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:877: in save_base\n    updated = self._save_table(\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:1020: in _save_table\n    results = self._do_insert(\n.venv\\Lib\\site-packages\\django\\db\\models\\base.py:1061: in _do_insert\n    return manager._insert(\n.venv\\Lib\\site-packages\\django\\db\\models\\manager.py:87: in manager_method\n    return getattr(self.get_queryset(), name)(*args, **kwargs)\n.venv\\Lib\\site-packages\\django\\db\\models\\query.py:1805: in _insert\n    return query.get_compiler(using=using).execute_sql(returning_fields)\n.venv\\Lib\\site-packages\\django\\db\\models\\sql\\compiler.py:1822: in execute_sql\n    cursor.execute(sql, params)\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:67: in execute\n    return self._execute_with_wrappers(\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:80: in _execute_with_wrappers\n    return executor(sql, params, many, context)\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:84: in _execute\n    with self.db.wrap_database_errors:\n.venv\\Lib\\site-packages\\django\\db\\utils.py:91: in __exit__\n    raise dj_exc_value.with_traceback(traceback) from exc_value\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nself = &amp;lt;django.db.backends.utils.CursorWrapper object at 0x0000021060FE7650&amp;gt;\nsql = &amp;#x27;INSERT INTO &amp;quot;api_tag&amp;quot; (&amp;quot;name&amp;quot;, &amp;quot;slug&amp;quot;) VALUES (%s, %s) RETURNING &amp;quot;api_tag&amp;quot;.&amp;quot;id&amp;quot;&amp;#x27;\nparams = (&amp;#x27;django&amp;#x27;, &amp;#x27;django-1&amp;#x27;)\nignored_wrapper_args = (False, {&amp;#x27;connection&amp;#x27;: &amp;lt;DatabaseWrapper vendor=&amp;#x27;postgresql&amp;#x27; alias=&amp;#x27;default&amp;#x27;&amp;gt;, &amp;#x27;cursor&amp;#x27;: &amp;lt;django.db.backends.utils.CursorWrapper object at 0x0000021060FE7650&amp;gt;})\n\n    def _execute(self, sql, params, *ignored_wrapper_args):\n        self.db.validate_no_broken_transaction()\n        with self.db.wrap_database_errors:\n            if params is None:\n                # params default might be backend specific.\n                return self.cursor.execute(sql)\n            else:\n&amp;gt;               return self.cursor.execute(sql, params)\nE               django.db.utils.IntegrityError: duplicate key value violates unique constraint &amp;quot;api_tag_name_key&amp;quot;\nE               DETAIL:  Key (name)=(django) already exists.\n\n.venv\\Lib\\site-packages\\django\\db\\backends\\utils.py:89: IntegrityError\n&#34;}], &#34;api/test/test_serializers.py::test_post_serializer_like_fields&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_serializers.py::test_post_serializer_like_fields&#34;, &#34;duration&#34;: &#34;251 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_serializers.py::test_post_serializer_like_fields&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;251 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_serializers.py::test_comment_serializer_basic_fields&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_serializers.py::test_comment_serializer_basic_fields&#34;, &#34;duration&#34;: &#34;260 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_serializers.py::test_comment_serializer_basic_fields&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;260 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_serializers.py::test_like_serializer_fields&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_serializers.py::test_like_serializer_fields&#34;, &#34;duration&#34;: &#34;286 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_serializers.py::test_like_serializer_fields&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;286 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_serializers.py::test_tag_serializer_output&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_serializers.py::test_tag_serializer_output&#34;, &#34;duration&#34;: &#34;16 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_serializers.py::test_tag_serializer_output&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;16 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_signals.py::test_profile_created_on_user_create&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_signals.py::test_profile_created_on_user_create&#34;, &#34;duration&#34;: &#34;251 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_signals.py::test_profile_created_on_user_create&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;251 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_signals.py::test_profile_persist_on_user_save_again&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_signals.py::test_profile_persist_on_user_save_again&#34;, &#34;duration&#34;: &#34;269 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_signals.py::test_profile_persist_on_user_save_again&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;269 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_signals.py::test_create_default_tags_idempotent&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_signals.py::test_create_default_tags_idempotent&#34;, &#34;duration&#34;: &#34;237 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_signals.py::test_create_default_tags_idempotent&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;237 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_signals.py::test_create_default_security_questions_idempotent&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_signals.py::test_create_default_security_questions_idempotent&#34;, &#34;duration&#34;: &#34;17 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_signals.py::test_create_default_security_questions_idempotent&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;17 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_startup.py::test_creates_admin_from_env&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_startup.py::test_creates_admin_from_env&#34;, &#34;duration&#34;: &#34;562 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_startup.py::test_creates_admin_from_env&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;562 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n[boot] Created default admin: env_admin\n&#34;}], &#34;api/test/test_startup.py::test_noop_when_admin_already_exists&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;api/test/test_startup.py::test_noop_when_admin_already_exists&#34;, &#34;duration&#34;: &#34;274 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_startup.py::test_noop_when_admin_already_exists&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;274 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;monkeypatch = &amp;lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000021060C38410&amp;gt;\n\n    def test_noop_when_admin_already_exists(monkeypatch):\n        existing = User.objects.create_superuser(\n            username=&amp;quot;exists&amp;quot;, email=&amp;quot;exists@example.com&amp;quot;, password=&amp;quot;Passw0rd!&amp;quot;\n        )\n    \n        monkeypatch.setenv(&amp;quot;DJANGO_DEFAULT_ADMIN_USERNAME&amp;quot;, &amp;quot;new_admin&amp;quot;)\n        User.objects.filter(is_superuser=True)\n        ensure_default_admin()\n    \n        admins = User.objects.filter(is_superuser=True)\n&amp;gt;       assert admins.count() == 1\nE       assert 2 == 1\nE        +  where 2 = count()\nE        +    where count = &amp;lt;QuerySet [&amp;lt;CustomUser: exists&amp;gt;, &amp;lt;CustomUser: admin&amp;gt;]&amp;gt;.count\n\napi\\test\\test_startup.py:38: AssertionError\n&#34;}], &#34;api/test/test_startup.py::test_uses_code_defaults_when_env_missing&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_startup.py::test_uses_code_defaults_when_env_missing&#34;, &#34;duration&#34;: &#34;520 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_startup.py::test_uses_code_defaults_when_env_missing&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;520 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n[boot] Created default admin: admin\n&#34;}], &#34;api/test/test_startup.py::test_swallow_db_errors&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_startup.py::test_swallow_db_errors&#34;, &#34;duration&#34;: &#34;6 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_startup.py::test_swallow_db_errors&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;6 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_user_view.py::test_get_requires_auth&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_user_view.py::test_get_requires_auth&#34;, &#34;duration&#34;: &#34;6 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_user_view.py::test_get_requires_auth&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;6 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_user_view.py::test_get_profile_ok&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_user_view.py::test_get_profile_ok&#34;, &#34;duration&#34;: &#34;269 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_user_view.py::test_get_profile_ok&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;269 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_user_view.py::test_put_updates_user_and_nested_profile&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_user_view.py::test_put_updates_user_and_nested_profile&#34;, &#34;duration&#34;: &#34;280 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_user_view.py::test_put_updates_user_and_nested_profile&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;280 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_user_view.py::test_put_read_only_fields_ignored&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_user_view.py::test_put_read_only_fields_ignored&#34;, &#34;duration&#34;: &#34;281 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_user_view.py::test_put_read_only_fields_ignored&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;281 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_user_view.py::test_put_partial_fields_only_profile&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_user_view.py::test_put_partial_fields_only_profile&#34;, &#34;duration&#34;: &#34;256 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_user_view.py::test_put_partial_fields_only_profile&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;256 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_serializers.py::test_blog_expansion_request_serializer_validation&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_serializers.py::test_blog_expansion_request_serializer_validation&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_serializers.py::test_blog_expansion_request_serializer_validation&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_views_init_has_all[api.views]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_views_init_has_all[api.views]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_views_init_has_all[api.views]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_each_symbol_importable[AdminStatusSerializer]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_each_symbol_importable[AdminStatusSerializer]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_each_symbol_importable[AdminStatusSerializer]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_each_symbol_importable[AdminUserManagementView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_each_symbol_importable[AdminUserManagementView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_each_symbol_importable[AdminUserManagementView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_each_symbol_importable[BlogExpansionAPIView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_each_symbol_importable[BlogExpansionAPIView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_each_symbol_importable[BlogExpansionAPIView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_each_symbol_importable[CommentViewSet]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_each_symbol_importable[CommentViewSet]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_each_symbol_importable[CommentViewSet]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_each_symbol_importable[GoogleOneTapLoginAPIView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_each_symbol_importable[GoogleOneTapLoginAPIView]&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_each_symbol_importable[GoogleOneTapLoginAPIView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_each_symbol_importable[HelloWorldView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_each_symbol_importable[HelloWorldView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_each_symbol_importable[HelloWorldView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_each_symbol_importable[HighlightedPostsView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_each_symbol_importable[HighlightedPostsView]&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_each_symbol_importable[HighlightedPostsView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_each_symbol_importable[LikeViewSet]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_each_symbol_importable[LikeViewSet]&#34;, &#34;duration&#34;: &#34;1 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_each_symbol_importable[LikeViewSet]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;1 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_each_symbol_importable[LogoutView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_each_symbol_importable[LogoutView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_each_symbol_importable[LogoutView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_each_symbol_importable[MyTokenObtainPairView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_each_symbol_importable[MyTokenObtainPairView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_each_symbol_importable[MyTokenObtainPairView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_each_symbol_importable[PostViewSet]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_each_symbol_importable[PostViewSet]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_each_symbol_importable[PostViewSet]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_each_symbol_importable[SignupView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_each_symbol_importable[SignupView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_each_symbol_importable[SignupView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_each_symbol_importable[TagViewSet]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_each_symbol_importable[TagViewSet]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_each_symbol_importable[TagViewSet]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_each_symbol_importable[UserProfileView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_each_symbol_importable[UserProfileView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_each_symbol_importable[UserProfileView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_viewset_like_exports_are_viewsets[PostViewSet]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_viewset_like_exports_are_viewsets[PostViewSet]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_viewset_like_exports_are_viewsets[PostViewSet]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_viewset_like_exports_are_viewsets[TagViewSet]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_viewset_like_exports_are_viewsets[TagViewSet]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_viewset_like_exports_are_viewsets[TagViewSet]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_viewset_like_exports_are_viewsets[CommentViewSet]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_viewset_like_exports_are_viewsets[CommentViewSet]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_viewset_like_exports_are_viewsets[CommentViewSet]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_viewset_like_exports_are_viewsets[LikeViewSet]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_viewset_like_exports_are_viewsets[LikeViewSet]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_viewset_like_exports_are_viewsets[LikeViewSet]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[HelloWorldView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[HelloWorldView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[HelloWorldView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[SignupView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[SignupView]&#34;, &#34;duration&#34;: &#34;3 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[SignupView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;3 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[MyTokenObtainPairView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[MyTokenObtainPairView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[MyTokenObtainPairView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[LogoutView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[LogoutView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[LogoutView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[UserProfileView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[UserProfileView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[UserProfileView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[AdminUserManagementView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[AdminUserManagementView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[AdminUserManagementView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[HighlightedPostsView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[HighlightedPostsView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[HighlightedPostsView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[BlogExpansionAPIView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[BlogExpansionAPIView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[BlogExpansionAPIView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[GoogleOneTapLoginAPIView]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[GoogleOneTapLoginAPIView]&#34;, &#34;duration&#34;: &#34;2 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_view_like_exports_are_apiviews[GoogleOneTapLoginAPIView]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;2 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;api/test/test_views_init_py.py::test_import_star_respects_all&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;api/test/test_views_init_py.py::test_import_star_respects_all&#34;, &#34;duration&#34;: &#34;7 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;api/test/test_views_init_py.py::test_import_star_respects_all&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;7 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}]}, &#34;renderCollapsed&#34;: [&#34;passed&#34;], &#34;initialSort&#34;: &#34;result&#34;, &#34;title&#34;: &#34;pytest_report.html&#34;}"></div>
+    <script>
+      (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const { getCollapsedCategory, setCollapsedIds } = require('./storage.js')
+
+class DataManager {
+    setManager(data) {
+        const collapsedCategories = [...getCollapsedCategory(data.renderCollapsed)]
+        const collapsedIds = []
+        const tests = Object.values(data.tests).flat().map((test, index) => {
+            const collapsed = collapsedCategories.includes(test.result.toLowerCase())
+            const id = `test_${index}`
+            if (collapsed) {
+                collapsedIds.push(id)
+            }
+            return {
+                ...test,
+                id,
+                collapsed,
+            }
+        })
+        const dataBlob = { ...data, tests }
+        this.data = { ...dataBlob }
+        this.renderData = { ...dataBlob }
+        setCollapsedIds(collapsedIds)
+    }
+
+    get allData() {
+        return { ...this.data }
+    }
+
+    resetRender() {
+        this.renderData = { ...this.data }
+    }
+
+    setRender(data) {
+        this.renderData.tests = [...data]
+    }
+
+    toggleCollapsedItem(id) {
+        this.renderData.tests = this.renderData.tests.map((test) =>
+            test.id === id ? { ...test, collapsed: !test.collapsed } : test,
+        )
+    }
+
+    set allCollapsed(collapsed) {
+        this.renderData = { ...this.renderData, tests: [...this.renderData.tests.map((test) => (
+            { ...test, collapsed }
+        ))] }
+    }
+
+    get testSubset() {
+        return [...this.renderData.tests]
+    }
+
+    get environment() {
+        return this.renderData.environment
+    }
+
+    get initialSort() {
+        return this.data.initialSort
+    }
+}
+
+module.exports = {
+    manager: new DataManager(),
+}
+
+},{"./storage.js":8}],2:[function(require,module,exports){
+const mediaViewer = require('./mediaviewer.js')
+const templateEnvRow = document.getElementById('template_environment_row')
+const templateResult = document.getElementById('template_results-table__tbody')
+
+function htmlToElements(html) {
+    const temp = document.createElement('template')
+    temp.innerHTML = html
+    return temp.content.childNodes
+}
+
+const find = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return elem.querySelector(selector)
+}
+
+const findAll = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return [...elem.querySelectorAll(selector)]
+}
+
+const dom = {
+    getStaticRow: (key, value) => {
+        const envRow = templateEnvRow.content.cloneNode(true)
+        const isObj = typeof value === 'object' && value !== null
+        const values = isObj ? Object.keys(value).map((k) => `${k}: ${value[k]}`) : null
+
+        const valuesElement = htmlToElements(
+            values ? `<ul>${values.map((val) => `<li>${val}</li>`).join('')}<ul>` : `<div>${value}</div>`)[0]
+        const td = findAll('td', envRow)
+        td[0].textContent = key
+        td[1].appendChild(valuesElement)
+
+        return envRow
+    },
+    getResultTBody: ({ testId, id, log, extras, resultsTableRow, tableHtml, result, collapsed }) => {
+        const resultBody = templateResult.content.cloneNode(true)
+        resultBody.querySelector('tbody').classList.add(result.toLowerCase())
+        resultBody.querySelector('tbody').id = testId
+        resultBody.querySelector('.collapsible').dataset.id = id
+
+        resultsTableRow.forEach((html) => {
+            const t = document.createElement('template')
+            t.innerHTML = html
+            resultBody.querySelector('.collapsible').appendChild(t.content)
+        })
+
+        if (log) {
+            // Wrap lines starting with "E" with span.error to color those lines red
+            const wrappedLog = log.replace(/^E.*$/gm, (match) => `<span class="error">${match}</span>`)
+            resultBody.querySelector('.log').innerHTML = wrappedLog
+        } else {
+            resultBody.querySelector('.log').remove()
+        }
+
+        if (collapsed) {
+            resultBody.querySelector('.collapsible > td')?.classList.add('collapsed')
+            resultBody.querySelector('.extras-row').classList.add('hidden')
+        } else {
+            resultBody.querySelector('.collapsible > td')?.classList.remove('collapsed')
+        }
+
+        const media = []
+        extras?.forEach(({ name, format_type, content }) => {
+            if (['image', 'video'].includes(format_type)) {
+                media.push({ path: content, name, format_type })
+            }
+
+            if (format_type === 'html') {
+                resultBody.querySelector('.extraHTML').insertAdjacentHTML('beforeend', `<div>${content}</div>`)
+            }
+        })
+        mediaViewer.setup(resultBody, media)
+
+        // Add custom html from the pytest_html_results_table_html hook
+        tableHtml?.forEach((item) => {
+            resultBody.querySelector('td[class="extra"]').insertAdjacentHTML('beforeend', item)
+        })
+
+        return resultBody
+    },
+}
+
+module.exports = {
+    dom,
+    htmlToElements,
+    find,
+    findAll,
+}
+
+},{"./mediaviewer.js":6}],3:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const storageModule = require('./storage.js')
+
+const getFilteredSubSet = (filter) =>
+    manager.allData.tests.filter(({ result }) => filter.includes(result.toLowerCase()))
+
+const doInitFilter = () => {
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+}
+
+const doFilter = (type, show) => {
+    if (show) {
+        storageModule.showCategory(type)
+    } else {
+        storageModule.hideCategory(type)
+    }
+
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+
+    const sortColumn = storageModule.getSort()
+    doSort(sortColumn, true)
+}
+
+module.exports = {
+    doFilter,
+    doInitFilter,
+}
+
+},{"./datamanager.js":1,"./sort.js":7,"./storage.js":8}],4:[function(require,module,exports){
+const { redraw, bindEvents, renderStatic } = require('./main.js')
+const { doInitFilter } = require('./filter.js')
+const { doInitSort } = require('./sort.js')
+const { manager } = require('./datamanager.js')
+const data = JSON.parse(document.getElementById('data-container').dataset.jsonblob)
+
+function init() {
+    manager.setManager(data)
+    doInitFilter()
+    doInitSort()
+    renderStatic()
+    redraw()
+    bindEvents()
+}
+
+init()
+
+},{"./datamanager.js":1,"./filter.js":3,"./main.js":5,"./sort.js":7}],5:[function(require,module,exports){
+const { dom, find, findAll } = require('./dom.js')
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const { doFilter } = require('./filter.js')
+const {
+    getVisible,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    getSortDirection,
+    possibleFilters,
+} = require('./storage.js')
+
+const removeChildren = (node) => {
+    while (node.firstChild) {
+        node.removeChild(node.firstChild)
+    }
+}
+
+const renderStatic = () => {
+    const renderEnvironmentTable = () => {
+        const environment = manager.environment
+        const rows = Object.keys(environment).map((key) => dom.getStaticRow(key, environment[key]))
+        const table = document.getElementById('environment')
+        removeChildren(table)
+        rows.forEach((row) => table.appendChild(row))
+    }
+    renderEnvironmentTable()
+}
+
+const addItemToggleListener = (elem) => {
+    elem.addEventListener('click', ({ target }) => {
+        const id = target.parentElement.dataset.id
+        manager.toggleCollapsedItem(id)
+
+        const collapsedIds = getCollapsedIds()
+        if (collapsedIds.includes(id)) {
+            const updated = collapsedIds.filter((item) => item !== id)
+            setCollapsedIds(updated)
+        } else {
+            collapsedIds.push(id)
+            setCollapsedIds(collapsedIds)
+        }
+        redraw()
+    })
+}
+
+const renderContent = (tests) => {
+    const sortAttr = getSort(manager.initialSort)
+    const sortAsc = JSON.parse(getSortDirection())
+    const rows = tests.map(dom.getResultTBody)
+    const table = document.getElementById('results-table')
+    const tableHeader = document.getElementById('results-table-head')
+
+    const newTable = document.createElement('table')
+    newTable.id = 'results-table'
+
+    // remove all sorting classes and set the relevant
+    findAll('.sortable', tableHeader).forEach((elem) => elem.classList.remove('asc', 'desc'))
+    tableHeader.querySelector(`.sortable[data-column-type="${sortAttr}"]`)?.classList.add(sortAsc ? 'desc' : 'asc')
+    newTable.appendChild(tableHeader)
+
+    if (!rows.length) {
+        const emptyTable = document.getElementById('template_results-table__body--empty').content.cloneNode(true)
+        newTable.appendChild(emptyTable)
+    } else {
+        rows.forEach((row) => {
+            if (!!row) {
+                findAll('.collapsible td:not(.col-links', row).forEach(addItemToggleListener)
+                find('.logexpander', row).addEventListener('click',
+                    (evt) => evt.target.parentNode.classList.toggle('expanded'),
+                )
+                newTable.appendChild(row)
+            }
+        })
+    }
+
+    table.replaceWith(newTable)
+}
+
+const renderDerived = () => {
+    const currentFilter = getVisible()
+    possibleFilters.forEach((result) => {
+        const input = document.querySelector(`input[data-test-result="${result}"]`)
+        input.checked = currentFilter.includes(result)
+    })
+}
+
+const bindEvents = () => {
+    const filterColumn = (evt) => {
+        const { target: element } = evt
+        const { testResult } = element.dataset
+
+        doFilter(testResult, element.checked)
+        const collapsedIds = getCollapsedIds()
+        const updated = manager.renderData.tests.map((test) => {
+            return {
+                ...test,
+                collapsed: collapsedIds.includes(test.id),
+            }
+        })
+        manager.setRender(updated)
+        redraw()
+    }
+
+    const header = document.getElementById('environment-header')
+    header.addEventListener('click', () => {
+        const table = document.getElementById('environment')
+        table.classList.toggle('hidden')
+        header.classList.toggle('collapsed')
+    })
+
+    findAll('input[name="filter_checkbox"]').forEach((elem) => {
+        elem.addEventListener('click', filterColumn)
+    })
+
+    findAll('.sortable').forEach((elem) => {
+        elem.addEventListener('click', (evt) => {
+            const { target: element } = evt
+            const { columnType } = element.dataset
+            doSort(columnType)
+            redraw()
+        })
+    })
+
+    document.getElementById('show_all_details').addEventListener('click', () => {
+        manager.allCollapsed = false
+        setCollapsedIds([])
+        redraw()
+    })
+    document.getElementById('hide_all_details').addEventListener('click', () => {
+        manager.allCollapsed = true
+        const allIds = manager.renderData.tests.map((test) => test.id)
+        setCollapsedIds(allIds)
+        redraw()
+    })
+}
+
+const redraw = () => {
+    const { testSubset } = manager
+
+    renderContent(testSubset)
+    renderDerived()
+}
+
+module.exports = {
+    redraw,
+    bindEvents,
+    renderStatic,
+}
+
+},{"./datamanager.js":1,"./dom.js":2,"./filter.js":3,"./sort.js":7,"./storage.js":8}],6:[function(require,module,exports){
+class MediaViewer {
+    constructor(assets) {
+        this.assets = assets
+        this.index = 0
+    }
+
+    nextActive() {
+        this.index = this.index === this.assets.length - 1 ? 0 : this.index + 1
+        return [this.activeFile, this.index]
+    }
+
+    prevActive() {
+        this.index = this.index === 0 ? this.assets.length - 1 : this.index -1
+        return [this.activeFile, this.index]
+    }
+
+    get currentIndex() {
+        return this.index
+    }
+
+    get activeFile() {
+        return this.assets[this.index]
+    }
+}
+
+
+const setup = (resultBody, assets) => {
+    if (!assets.length) {
+        resultBody.querySelector('.media').classList.add('hidden')
+        return
+    }
+
+    const mediaViewer = new MediaViewer(assets)
+    const container = resultBody.querySelector('.media-container')
+    const leftArrow = resultBody.querySelector('.media-container__nav--left')
+    const rightArrow = resultBody.querySelector('.media-container__nav--right')
+    const mediaName = resultBody.querySelector('.media__name')
+    const counter = resultBody.querySelector('.media__counter')
+    const imageEl = resultBody.querySelector('img')
+    const sourceEl = resultBody.querySelector('source')
+    const videoEl = resultBody.querySelector('video')
+
+    const setImg = (media, index) => {
+        if (media?.format_type === 'image') {
+            imageEl.src = media.path
+
+            imageEl.classList.remove('hidden')
+            videoEl.classList.add('hidden')
+        } else if (media?.format_type === 'video') {
+            sourceEl.src = media.path
+
+            videoEl.classList.remove('hidden')
+            imageEl.classList.add('hidden')
+        }
+
+        mediaName.innerText = media?.name
+        counter.innerText = `${index + 1} / ${assets.length}`
+    }
+    setImg(mediaViewer.activeFile, mediaViewer.currentIndex)
+
+    const moveLeft = () => {
+        const [media, index] = mediaViewer.prevActive()
+        setImg(media, index)
+    }
+    const doRight = () => {
+        const [media, index] = mediaViewer.nextActive()
+        setImg(media, index)
+    }
+    const openImg = () => {
+        window.open(mediaViewer.activeFile.path, '_blank')
+    }
+    if (assets.length === 1) {
+        container.classList.add('media-container--fullscreen')
+    } else {
+        leftArrow.addEventListener('click', moveLeft)
+        rightArrow.addEventListener('click', doRight)
+    }
+    imageEl.addEventListener('click', openImg)
+}
+
+module.exports = {
+    setup,
+}
+
+},{}],7:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const storageModule = require('./storage.js')
+
+const genericSort = (list, key, ascending, customOrder) => {
+    let sorted
+    if (customOrder) {
+        sorted = list.sort((a, b) => {
+            const aValue = a.result.toLowerCase()
+            const bValue = b.result.toLowerCase()
+
+            const aIndex = customOrder.findIndex((item) => item.toLowerCase() === aValue)
+            const bIndex = customOrder.findIndex((item) => item.toLowerCase() === bValue)
+
+            // Compare the indices to determine the sort order
+            return aIndex - bIndex
+        })
+    } else {
+        sorted = list.sort((a, b) => a[key] === b[key] ? 0 : a[key] > b[key] ? 1 : -1)
+    }
+
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const durationSort = (list, ascending) => {
+    const parseDuration = (duration) => {
+        if (duration.includes(':')) {
+            // If it's in the format "HH:mm:ss"
+            const [hours, minutes, seconds] = duration.split(':').map(Number)
+            return (hours * 3600 + minutes * 60 + seconds) * 1000
+        } else {
+            // If it's in the format "nnn ms"
+            return parseInt(duration)
+        }
+    }
+    const sorted = list.sort((a, b) => parseDuration(a['duration']) - parseDuration(b['duration']))
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const doInitSort = () => {
+    const type = storageModule.getSort(manager.initialSort)
+    const ascending = storageModule.getSortDirection()
+    const list = manager.testSubset
+    const initialOrder = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed', 'Skipped', 'Passed']
+
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    if (type?.toLowerCase() === 'original') {
+        manager.setRender(list)
+    } else {
+        let sortedList
+        switch (type) {
+        case 'duration':
+            sortedList = durationSort(list, ascending)
+            break
+        case 'result':
+            sortedList = genericSort(list, type, ascending, initialOrder)
+            break
+        default:
+            sortedList = genericSort(list, type, ascending)
+            break
+        }
+        manager.setRender(sortedList)
+    }
+}
+
+const doSort = (type, skipDirection) => {
+    const newSortType = storageModule.getSort(manager.initialSort) !== type
+    const currentAsc = storageModule.getSortDirection()
+    let ascending
+    if (skipDirection) {
+        ascending = currentAsc
+    } else {
+        ascending = newSortType ? false : !currentAsc
+    }
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    const list = manager.testSubset
+    const sortedList = type === 'duration' ? durationSort(list, ascending) : genericSort(list, type, ascending)
+    manager.setRender(sortedList)
+}
+
+module.exports = {
+    doInitSort,
+    doSort,
+}
+
+},{"./datamanager.js":1,"./storage.js":8}],8:[function(require,module,exports){
+const possibleFilters = [
+    'passed',
+    'skipped',
+    'failed',
+    'error',
+    'xfailed',
+    'xpassed',
+    'rerun',
+]
+
+const getVisible = () => {
+    const url = new URL(window.location.href)
+    const settings = new URLSearchParams(url.search).get('visible')
+    const lower = (item) => {
+        const lowerItem = item.toLowerCase()
+        if (possibleFilters.includes(lowerItem)) {
+            return lowerItem
+        }
+        return null
+    }
+    return settings === null ?
+        possibleFilters :
+        [...new Set(settings?.split(',').map(lower).filter((item) => item))]
+}
+
+const hideCategory = (categoryToHide) => {
+    const url = new URL(window.location.href)
+    const visibleParams = new URLSearchParams(url.search).get('visible')
+    const currentVisible = visibleParams ? visibleParams.split(',') : [...possibleFilters]
+    const settings = [...new Set(currentVisible)].filter((f) => f !== categoryToHide).join(',')
+
+    url.searchParams.set('visible', settings)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const showCategory = (categoryToShow) => {
+    if (typeof window === 'undefined') {
+        return
+    }
+    const url = new URL(window.location.href)
+    const currentVisible = new URLSearchParams(url.search).get('visible')?.split(',').filter(Boolean) ||
+        [...possibleFilters]
+    const settings = [...new Set([categoryToShow, ...currentVisible])]
+    const noFilter = possibleFilters.length === settings.length || !settings.length
+
+    noFilter ? url.searchParams.delete('visible') : url.searchParams.set('visible', settings.join(','))
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getSort = (initialSort) => {
+    const url = new URL(window.location.href)
+    let sort = new URLSearchParams(url.search).get('sort')
+    if (!sort) {
+        sort = initialSort || 'result'
+    }
+    return sort
+}
+
+const setSort = (type) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('sort', type)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getCollapsedCategory = (renderCollapsed) => {
+    let categories
+    if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        const collapsedItems = new URLSearchParams(url.search).get('collapsed')
+        switch (true) {
+        case !renderCollapsed && collapsedItems === null:
+            categories = ['passed']
+            break
+        case collapsedItems?.length === 0 || /^["']{2}$/.test(collapsedItems):
+            categories = []
+            break
+        case /^all$/.test(collapsedItems) || collapsedItems === null && /^all$/.test(renderCollapsed):
+            categories = [...possibleFilters]
+            break
+        default:
+            categories = collapsedItems?.split(',').map((item) => item.toLowerCase()) || renderCollapsed
+            break
+        }
+    } else {
+        categories = []
+    }
+    return categories
+}
+
+const getSortDirection = () => JSON.parse(sessionStorage.getItem('sortAsc')) || false
+const setSortDirection = (ascending) => sessionStorage.setItem('sortAsc', ascending)
+
+const getCollapsedIds = () => JSON.parse(sessionStorage.getItem('collapsedIds')) || []
+const setCollapsedIds = (list) => sessionStorage.setItem('collapsedIds', JSON.stringify(list))
+
+module.exports = {
+    getVisible,
+    hideCategory,
+    showCategory,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    setSort,
+    getSortDirection,
+    setSortDirection,
+    getCollapsedCategory,
+    possibleFilters,
+}
+
+},{}]},{},[4]);
+    </script>
+  </footer>
+</html>

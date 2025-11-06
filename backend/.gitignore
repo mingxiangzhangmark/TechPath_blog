@@ -1,0 +1,45 @@
+/.env
+/venv
+/media/avatars/
+/media/user_uploads/
+/media/post_covers/
+/db.sqlite3
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+.idea/
+.vscode/
+
+venv/
+.venv/
+
+
+cat >> .gitignore << 'EOF'
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+.env
+
+# Django / project
+db.sqlite3
+media/
+staticfiles/
+
+# Tests & coverage
+.coverage
+htmlcov/
+.pytest_cache/
+report.html
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+EOF
